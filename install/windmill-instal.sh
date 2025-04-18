@@ -15,6 +15,7 @@ __        ___           _       _ _
                                          
 EOF
 }
+
 YW=$(echo "\033[33m")
 GN=$(echo "\033[1;92m")
 RD=$(echo "\033[01;31m")
@@ -52,20 +53,6 @@ function msg_ok() {
 
 clear
 header_info
-
-if command -v pveversion >/dev/null 2>&1; then
-  echo -e "⚠️  Can't run inside Proxmox host"
-  exit
-fi
-
-while true; do
-    read -rp "This will install ${APP} on ${hostname}. Proceed (y/n)? " yn
-    case $yn in
-        [Yy]*) break ;;
-        [Nn]*) exit ;;
-        *) echo "Please answer yes or no." ;;
-    esac
-done
 
 msg_info "Updating system"
 apt-get update &>/dev/null
