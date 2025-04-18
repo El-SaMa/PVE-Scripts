@@ -4,6 +4,7 @@
 # Author: elsama
 # License: MIT
 
+function header_info {
 cat <<"EOF"
 __        ___           _       _ _       
 \ \      / (_)         | |     | | |      
@@ -12,6 +13,8 @@ __        ___           _       _ _
    \_/\_/  |_| | | | | | | (_) | | | (_) |
              |_| |_| |_|\___/|_|_|\___/  
 EOF
+}
+
 
 YW=$(echo "\033[33m")
 GN=$(echo "\033[1;92m")
