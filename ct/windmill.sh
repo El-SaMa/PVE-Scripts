@@ -18,7 +18,16 @@ UNPRIVILEGED=1
 echo -e "\n\033[1;92mInstalling container for $APP...\033[0m"
 
 # Create container
-pct create $CTID local-lvm:$(pct create $CTID local-lvm -storage local-lvm -rootfs ${DISK_SIZE}G -ostemplate local:vztmpl/debian-12-standard_*.tar.zst -hostname $HOSTNAME -net0 name=eth0,bridge=$BRIDGE,ip=$IP,gw=$GATEWAY -cores $CORE_COUNT -memory $RAM_SIZE -unprivileged $UNPRIVILEGED --start 1 --onboot 1 --features nesting=1,keyctl=1 2>&1 | tee /tmp/ctcreate.log)
+pct create $CTID local:vztmpl/debian-12-standard_*.tar.zst \
+  --rootfs local-lvm:${DISK_SIZE} \
+  --hostname $HOSTNAME \
+  --net0 name=eth0,bridge=$BRIDGE,ip=$IP \
+  --cores $CORE_COUNT \
+  --memory $RAM_SIZE \
+  --unprivileged $UNPRIVILEGED \
+  --features nesting=1,keyctl=1 \
+  --start 1 \
+  --onboot 1
 
 echo -e "\033[1;92m✓ Container created with ID $CTID\033[0m"
 
