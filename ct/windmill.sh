@@ -1,44 +1,40 @@
 #!/usr/bin/env bash
 
-# Windmill.dev LXC Installer (tteck-style, minimal)
+# Windmill.dev Proxmox LXC Installer
 # Author: elsama
-# License: MIT
-
+# Inspired by tteck
 APP="Windmill.dev"
 CTID=902
+TEMPLATE="local:vztmpl/debian-12-standard_20240311_amd64.tar.zst"
 HOSTNAME="windmill"
 DISK_SIZE="8"
-CORE_COUNT="2"
-RAM_SIZE="2048"
+CPU="2"
+RAM="2048"
 BRIDGE="vmbr0"
-IP="dhcp"
-GATEWAY=""
-UNPRIVILEGED=1
+UNPRIV="1"
 
-echo -e "\n\033[1;92mInstalling container for $APP...\033[0m"
+echo -e "\033[1;92mCreating LXC container for $APP...\033[0m"
 
-# Create container
-pct create $CTID local:vztmpl/debian-12-standard_*.tar.zst \
-  --rootfs local-lvm:${DISK_SIZE} \
+pct create $CTID $TEMPLATE \
+  --rootfs local-lvm:${DISK_SIZE}G \
   --hostname $HOSTNAME \
-  --net0 name=eth0,bridge=$BRIDGE,ip=$IP \
-  --cores $CORE_COUNT \
-  --memory $RAM_SIZE \
-  --unprivileged $UNPRIVILEGED \
+  --net0 name=eth0,bridge=$BRIDGE,ip=dhcp \
+  --cores $CPU \
+  --memory $RAM \
+  --unprivileged $UNPRIV \
   --features nesting=1,keyctl=1 \
   --start 1 \
   --onboot 1
 
-echo -e "\033[1;92m✓ Container created with ID $CTID\033[0m"
+echo -e "\033[1;92m✓ LXC $CTID created and started. Installing $APP...\033[0m"
 
-# Attach and install Windmill
 pct exec $CTID -- bash -c "
-  apt-get update -qq &&
-  apt-get install -y curl git docker.io docker-compose -qq &&
+  apt update &&
+  apt install -y curl git docker.io docker-compose &&
   git clone https://github.com/windmill-labs/windmill.git /opt/windmill &&
   cd /opt/windmill &&
   cp .env.sample .env &&
   docker-compose up -d --build
 "
 
-echo -e "\n\033[1;92m✓ Windmill should now be running at: http://<container-IP>:3000\033[0m"
+echo -e "\n\033[1;92m✓ All done. Check Windmill at: http://<container-IP>:3000\033[0m"
