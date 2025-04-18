@@ -1,35 +1,35 @@
 #!/usr/bin/env bash
-source <(curl -s https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/build.func)
-# Copyright (c) 2021-2025 El-SaMa
-# Author: El-SaMa | https://github.com/El-SaMa
+
+# Windmill.dev LXC Installer (tteck-style, minimal)
+# Author: elsama
 # License: MIT
-# Source: https://windmill.dev/
 
-APP="Windmill"
-var_tags="workflow;automation;ai"
-var_cpu="2"
-var_ram="2048"
-var_disk="8"
-var_os="debian"
-var_version="12"
-var_unprivileged="1"
+APP="Windmill.dev"
+CTID=902
+HOSTNAME="windmill"
+DISK_SIZE="8"
+CORE_COUNT="2"
+RAM_SIZE="2048"
+BRIDGE="vmbr0"
+IP="dhcp"
+GATEWAY=""
+UNPRIVILEGED=1
 
-header_info "$APP"
-variables
-color
-catch_errors
+echo -e "\n\033[1;92mInstalling container for $APP...\033[0m"
 
-function run_script_in_container() {
-  # Push and execute windmill installer inside the container
-  lxc-attach -n "$CTID" -- bash -c "bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/El-SaMa/PVE-Scripts/main/install/windmill-install.sh)\""
-}
+# Create container
+pct create $CTID local-lvm:$(pct create $CTID local-lvm -storage local-lvm -rootfs ${DISK_SIZE}G -ostemplate local:vztmpl/debian-12-standard_*.tar.zst -hostname $HOSTNAME -net0 name=eth0,bridge=$BRIDGE,ip=$IP,gw=$GATEWAY -cores $CORE_COUNT -memory $RAM_SIZE -unprivileged $UNPRIVILEGED --start 1 --onboot 1 --features nesting=1,keyctl=1 2>&1 | tee /tmp/ctcreate.log)
 
-start
-build_container
-description
-run_script_in_container
+echo -e "\033[1;92m✓ Container created with ID $CTID\033[0m"
 
-msg_ok "Completed Successfully!\n"
-echo -e "${CREATING}${GN}${APP} setup has been successfully initialized!${CL}"
-echo -e "${INFO}${YW} Access it using the following URL:${CL}"
-echo -e "${TAB}${GATEWAY}${BGN}http://${IP}:3000${CL}"
+# Attach and install Windmill
+pct exec $CTID -- bash -c "
+  apt-get update -qq &&
+  apt-get install -y curl git docker.io docker-compose -qq &&
+  git clone https://github.com/windmill-labs/windmill.git /opt/windmill &&
+  cd /opt/windmill &&
+  cp .env.sample .env &&
+  docker-compose up -d --build
+"
+
+echo -e "\n\033[1;92m✓ Windmill should now be running at: http://<container-IP>:3000\033[0m"
